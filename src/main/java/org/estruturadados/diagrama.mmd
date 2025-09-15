@@ -1,8 +1,25 @@
 classDiagram
-%% ================== Modelos principais ==================
-class Cliente {
+%% ================== Núcleo de Pessoas/Usuários ==================
+class Usuario {
+  <<abstract>>
+  +UUID id
   +String nome
+  +String email
+}
+
+class Vendedor {
+  +String matricula
+}
+Usuario <|-- Vendedor
+
+class Supervisor {
+  +Decimal limiteAprovacao
+}
+Usuario <|-- Supervisor
+
+class Cliente {
   +String cpf
+  +String nomeCompleto
   +String telefone
   +Date dataNascimento
 }
@@ -17,29 +34,104 @@ class Endereco {
   +String cep
 }
 
-Cliente "1" o-- "1..*" Endereco : possui
+%% ================== Catálogo de Produtos ==================
+class Categoria {
+  +UUID id
+  +String nome
+}
+class Subcategoria {
+  +UUID id
+  +String nome
+}
+class Fabricante {
+  +String cnpj
+  +String nome
+}
+class Produto {
+  +UUID id
+  +String sku
+  +String nome
+  +String descricao
+  +Decimal valorUnitario
+  +Integer quantidadeEstoque
+}
 
-class Compra {
+Subcategoria --> "1" Categoria
+Produto --> "1" Subcategoria
+Produto --> "1" Fabricante
+Empresa "1" --> "0..*" Produto : catálogo por empresa
+
+%% ================== Vendas / Pedidos ==================
+class Pedido {
   +UUID id
   +Date data
-  +Double total
-  +StatusPedido status
+  +Decimal totalBruto
+  +Decimal desconto
+  +Decimal totalLiquido
+  +PedidoStatus status
 }
 
-class ItemCompra {
-  +String produto
+class ItemPedido {
   +Integer quantidade
-  +Double valorUnitario
-  +Double subtotal
+  +Decimal valorUnitario
+  +Decimal subtotal
 }
 
-Compra "1" *-- "1..*" ItemCompra : itens
-Compra --> Cliente : realizadoPor
+Pedido "1" *-- "1..*" ItemPedido : composição
+Pedido "1" --> "1" Cliente
+Pedido "1" --> "1" Vendedor : registradoPor
+Pedido "1" --> "1" Empresa
 
-%% ================== Enum ==================
-class StatusPedido {
+%% ================== Pagamentos ==================
+class FormaPagamento {
+  +UUID id
+  +String descricao
+}
+class Pagamento {
+  +UUID id
+  +Decimal valor
+  +Date data
+  +PagamentoStatus status
+  +String nsu
+}
+
+Pedido "0..1" --> "1" Pagamento
+Pagamento "1" --> "1" FormaPagamento
+
+%% ================== Aprovação ==================
+class AprovacaoPedido {
+  +UUID id
+  +Date data
+  +String observacao
+  +AprovacaoStatus status
+}
+
+Pedido "0..*" o-- "0..*" AprovacaoPedido : histórico
+AprovacaoPedido "1" --> "1" Supervisor
+Pedido ..> RegraAprovacao : "verifica limite"
+
+%% ================== Enums ==================
+class PedidoStatus {
   <<enumeration>>
   ABERTO
+  EM_APROVACAO
+  APROVADO
+  REPROVADO
   FINALIZADO
   CANCELADO
+}
+
+class PagamentoStatus {
+  <<enumeration>>
+  PENDENTE
+  AUTORIZADO
+  NEGADO
+  LIQUIDADO
+}
+
+class AprovacaoStatus {
+  <<enumeration>>
+  PENDENTE
+  APROVADO
+  REPROVADO
 }
