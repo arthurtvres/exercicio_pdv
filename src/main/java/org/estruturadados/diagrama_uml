@@ -1,0 +1,45 @@
+classDiagram
+%% ================== Modelos principais ==================
+class Cliente {
+  +String nome
+  +String cpf
+  +String telefone
+  +Date dataNascimento
+}
+
+class Endereco {
+  +String logradouro
+  +String numero
+  +String complemento
+  +String bairro
+  +String cidade
+  +String uf
+  +String cep
+}
+
+Cliente "1" o-- "1..*" Endereco : possui
+
+class Compra {
+  +UUID id
+  +Date data
+  +Double total
+  +StatusPedido status
+}
+
+class ItemCompra {
+  +String produto
+  +Integer quantidade
+  +Double valorUnitario
+  +Double subtotal
+}
+
+Compra "1" *-- "1..*" ItemCompra : itens
+Compra --> Cliente : realizadoPor
+
+%% ================== Enum ==================
+class StatusPedido {
+  <<enumeration>>
+  ABERTO
+  FINALIZADO
+  CANCELADO
+}
