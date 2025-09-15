@@ -1,5 +1,5 @@
 classDiagram
-%% ================== Núcleo de Pessoas/Usuários ==================
+%% ================== Pessoas ==================
 class Usuario {
   <<abstract>>
   +UUID id
@@ -23,6 +23,7 @@ class Cliente {
   +String telefone
   +Date dataNascimento
 }
+Cliente "1" o-- "1..*" Endereco : possui
 
 class Endereco {
   +String logradouro
@@ -33,6 +34,17 @@ class Endereco {
   +String uf
   +String cep
 }
+
+%% ================== Empresa ==================
+class Empresa {
+  +String cnpj
+  +String razaoSocial
+  +String nomeFantasia
+}
+Empresa "1" *-- "1" Endereco : endereço
+Empresa "1" --> "0..*" Vendedor
+Empresa "1" --> "0..*" Supervisor
+Empresa "1" --> "0..*" Cliente
 
 %% ================== Catálogo de Produtos ==================
 class Categoria {
@@ -55,13 +67,12 @@ class Produto {
   +Decimal valorUnitario
   +Integer quantidadeEstoque
 }
+Subcategoria --> Categoria
+Produto --> Subcategoria
+Produto --> Fabricante
+Empresa --> Produto : catálogo
 
-Subcategoria --> "1" Categoria
-Produto --> "1" Subcategoria
-Produto --> "1" Fabricante
-Empresa "1" --> "0..*" Produto : catálogo por empresa
-
-%% ================== Vendas / Pedidos ==================
+%% ================== Vendas ==================
 class Pedido {
   +UUID id
   +Date data
@@ -70,17 +81,15 @@ class Pedido {
   +Decimal totalLiquido
   +PedidoStatus status
 }
-
 class ItemPedido {
   +Integer quantidade
   +Decimal valorUnitario
   +Decimal subtotal
 }
-
-Pedido "1" *-- "1..*" ItemPedido : composição
-Pedido "1" --> "1" Cliente
-Pedido "1" --> "1" Vendedor : registradoPor
-Pedido "1" --> "1" Empresa
+Pedido "1" *-- "1..*" ItemPedido
+Pedido --> Cliente
+Pedido --> Vendedor : registradoPor
+Pedido --> Empresa
 
 %% ================== Pagamentos ==================
 class FormaPagamento {
@@ -94,9 +103,8 @@ class Pagamento {
   +PagamentoStatus status
   +String nsu
 }
-
-Pedido "0..1" --> "1" Pagamento
-Pagamento "1" --> "1" FormaPagamento
+Pedido --> Pagamento
+Pagamento --> FormaPagamento
 
 %% ================== Aprovação ==================
 class AprovacaoPedido {
@@ -105,10 +113,8 @@ class AprovacaoPedido {
   +String observacao
   +AprovacaoStatus status
 }
-
-Pedido "0..*" o-- "0..*" AprovacaoPedido : histórico
-AprovacaoPedido "1" --> "1" Supervisor
-Pedido ..> RegraAprovacao : "verifica limite"
+Pedido o-- AprovacaoPedido : histórico
+AprovacaoPedido --> Supervisor
 
 %% ================== Enums ==================
 class PedidoStatus {
@@ -120,7 +126,6 @@ class PedidoStatus {
   FINALIZADO
   CANCELADO
 }
-
 class PagamentoStatus {
   <<enumeration>>
   PENDENTE
@@ -128,7 +133,6 @@ class PagamentoStatus {
   NEGADO
   LIQUIDADO
 }
-
 class AprovacaoStatus {
   <<enumeration>>
   PENDENTE
